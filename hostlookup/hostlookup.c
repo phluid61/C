@@ -118,6 +118,36 @@ void printflags(unsigned int f)
 	printf("]\n");
 }
 
+/* Warning: s6_addr must be at least 16 bytes */
+void printip6(unsigned char *addr)
+{
+	unsigned char a,b;
+	unsigned char start = 1;
+	signed char zeros = 0;
+	int i;
+	printf("[");
+	for (i = 0; i < 16; i += 2) {
+		a = addr[i];
+		b = addr[i+1];
+		if (zeros >= 0 && a == 0 && b == 0) {
+			zeros ++;
+		} else {
+			if (zeros > 0) {
+				printf("::");
+				zeros = -1;
+			} else if (!start) {
+				printf(":");
+			}
+			printf("%02X%02X", a, b);
+			start = 0;
+		}
+	}
+	if (zeros > 0) {
+		printf("::");
+	}
+	printf("]");
+}
+
 char *myerr(int e)
 {
 	switch (e) {
@@ -135,8 +165,10 @@ int main(int argc, char *argv[])
 	struct addrinfo *result;
 	struct addrinfo *res;
 	struct sockaddr_in *in;
+	struct sockaddr_in6 *in6;
 	struct hostent *host;
 	struct in_addr *ad;
+	struct in6_addr *ad6;
 	int at;
 	int error;
 	int i;
@@ -182,7 +214,7 @@ int main(int argc, char *argv[])
 		for (res = result; res != NULL; res = res->ai_next) {
 			ad = NULL;
 
-			printf(">\n  ai_flags = 0x%X ", res->ai_flags);
+			printf("  ai_flags = 0x%X ", res->ai_flags);
 			printflags(res->ai_flags);
 			printf("  ai_family = %d [AF_%s]\n  ai_socktype = %d [%s]\n  ai_protocol = %d [%s]\n", res->ai_family, family(res->ai_family), res->ai_socktype, stype(res->ai_socktype), res->ai_protocol, sockop(res->ai_protocol));
 			if (res->ai_canonname && *(res->ai_canonname)) {
@@ -190,43 +222,80 @@ int main(int argc, char *argv[])
 			} else {
 				printf("  ai_canonname = NULL\n");
 			}
-			printf("  ai_addr = {\n");
-			if (res->ai_addrlen == sizeof(struct sockaddr_in)) {
-				in = (struct sockaddr_in*)(res->ai_addr);
-				printf("    sin_family = %d [AF_%s]\n    sin_port = %d\n    sin_addr = {\n", in->sin_family, family(in->sin_family), in->sin_port);
-				if (sizeof(in->sin_addr) == sizeof(struct in_addr)) {
-					ad = (struct in_addr*)&(in->sin_addr);
-					at = in->sin_family;
-					printf("      s_addr = 0x%08X (%d.%d.%d.%d)\n", ad->s_addr, ad->s_addr & 0xff, (ad->s_addr >> 8) & 0xff, (ad->s_addr >> 16) & 0xff, ad->s_addr >> 24);
+			if (res->ai_family == AF_INET) {
+				/* IPv4 */
+				printf("  ai_addr = {\n");
+				if (res->ai_addrlen == sizeof(struct sockaddr_in)) {
+					in = (struct sockaddr_in*)(res->ai_addr);
+					printf("    sin_family = %d [AF_%s]\n    sin_port = %d\n    sin_addr = {\n", in->sin_family, family(in->sin_family), in->sin_port);
+					if (sizeof(in->sin_addr) == sizeof(struct in_addr)) {
+						ad = (struct in_addr*)&(in->sin_addr);
+						at = in->sin_family;
+						printf("      s_addr = 0x%08X (%d.%d.%d.%d)\n", ad->s_addr, ad->s_addr & 0xff, (ad->s_addr >> 8) & 0xff, (ad->s_addr >> 16) & 0xff, ad->s_addr >> 24);
+					} else {
+						printf("      ??? not an in_addr ???\n");
+					}
+					printf("    }\n");
 				} else {
-					printf("      ??? not an in_addr ???\n");
+					printf("    ??? not a sockaddr_in ???\n");
 				}
-				printf("    }\n");
-			} else {
-				printf("    ??? not a sockaddr_in ???\n");
-			}
-			printf("  }\n");
+				printf("  }\n");
 
-			/* use new getnameinfo */
-			memset((void*)hostname, 0, NI_MAXHOST);
-			error = getnameinfo(res->ai_addr, res->ai_addrlen, hostname, NI_MAXHOST, NULL, 0, 0);
-			if (error != 0) {
-				fprintf(stderr, "error in getnameinfo: %s\n", gai_strerror(error));
-			}
-			if (*hostname)
-				printf("  getnameinfo(ai_addr)\n    hostname: %s\n", hostname);
+				/* use new getnameinfo */
+				memset((void*)hostname, 0, NI_MAXHOST);
+				error = getnameinfo(res->ai_addr, res->ai_addrlen, hostname, NI_MAXHOST, NULL, 0, 0);
+				if (error != 0) {
+					fprintf(stderr, "error in getnameinfo: %s\n", gai_strerror(error));
+				}
+				if (*hostname)
+					printf("  getnameinfo(ai_addr)\n    hostname: %s\n", hostname);
 
-			/* use old gethostbyaddr */
-			if (ad) {
-				host = gethostbyaddr(ad, sizeof(ad), at);
-				if (!host) {
-					fprintf(stderr, "error in gethostbyaddr: %s\n", myerr(h_errno));
-				} else {
-					printf("  gethostbyaddr(ai_addr->sin_addr)\n    hostname: %s\n", host->h_name);
-					for (alias = host->h_aliases; alias && *alias; alias++) {
-						printf("  aka: %s\n", *alias);
+				/* use old gethostbyaddr */
+				if (ad) {
+					host = gethostbyaddr(ad, sizeof(ad), at);
+					if (!host) {
+						fprintf(stderr, "error in gethostbyaddr: %s\n", myerr(h_errno));
+					} else {
+						printf("  gethostbyaddr(ai_addr->sin_addr)\n    hostname: %s\n", host->h_name);
+						for (alias = host->h_aliases; alias && *alias; alias++) {
+							printf("  aka: %s\n", *alias);
+						}
 					}
 				}
+			} else if (res->ai_family == AF_INET6) {
+				/* IPv6 */
+				printf("  ai_addr = {\n");
+				if (res->ai_addrlen == sizeof(struct sockaddr_in6)) {
+					in6 = (struct sockaddr_in6*)(res->ai_addr);
+					printf("    sin6_family = %d [AF_%s]\n    sin6_port = %d\n    sin6_flowinfo = %d\n    sin6_addr = {\n", in6->sin6_family, family(in6->sin6_family), in6->sin6_port, in6->sin6_flowinfo);
+					if (sizeof(in6->sin6_addr) == sizeof(struct in6_addr)) {
+						ad6 = (struct in6_addr*)&(in6->sin6_addr);
+						printf("      s6_addr = ");
+						printip6(ad6->s6_addr);
+						printf("\n");
+					} else {
+						printf("      ??? not an in_addr ???\n");
+					}
+					printf("    }\n    sin6_scope_id = %d\n", in6->sin6_scope_id);
+				} else {
+					printf("    ??? not a sockaddr_in6 ???\n");
+				}
+				printf("  }\n");
+
+				/* use new getnameinfo */
+				memset((void*)hostname, 0, NI_MAXHOST);
+				error = getnameinfo(res->ai_addr, res->ai_addrlen, hostname, NI_MAXHOST, NULL, 0, 0);
+				if (error != 0) {
+					fprintf(stderr, "error in getnameinfo: %s\n", gai_strerror(error));
+				}
+				if (*hostname)
+					printf("  getnameinfo(ai_addr)\n    hostname: %s\n", hostname);
+			}
+
+			if (res->ai_next) {
+				printf(">\n");
+			} else {
+				printf(".\n");
 			}
 
 		}
