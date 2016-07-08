@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
 				if (!host) {
 					fprintf(stderr, "error in gethostbyaddr: %s\n", myerr(h_errno));
 				} else {
-					printf("  gethostbyaddr(ai_addr->sin_inaddr)\n    hostname: %s\n", host->h_name);
+					printf("  gethostbyaddr(ai_addr->sin_addr)\n    hostname: %s\n", host->h_name);
 					for (alias = host->h_aliases; alias && *alias; alias++) {
 						printf("  aka: %s\n", *alias);
 					}
