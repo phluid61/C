@@ -1,0 +1,25 @@
+VERSION:
+passwdgen (v1.0)
+OPTIONS:
+ -C #  -c #  --count=#
+   generate a fixed number of passwords.  Default is 5.
+ -N #  -n #  --min=#
+ -X #  -x #  --max=#
+   passwords have the given minimum/maximum length.  Defaults are 16, 32.
+ -- [CHARACTERS]
+   passwords are built using precisely the given set of characters.
+ [+-=]U  [+-=]u  --upper=[YES|NO|FORCE]
+ [+-=]L  [+-=]l  --lower=[YES|NO|FORCE]
+ [+-=]D  [+-=]d  --digits=[YES|NO|FORCE]
+ [+-=]A  [+-=]a  --ascii=[YES|NO|FORCE]
+   accept/deny/force upper case characters, lower case characters, decimal digits,
+   and non-alphanumeric ASCII characters (respectively) in passwords.
+   Defaults are: =ULD-A
+   Ignored if -- characters is specified.
+ [+-]P  [+-]p  --printable=[YES|NO]
+   only generate printable passwords (no 1,l,O,0 characters).  Default = YES
+   Ignored if -- characters is specified.
+ -V  -v  --version
+   show version information, and quit.
+ -?  --help
+   show this help information, and quit.
