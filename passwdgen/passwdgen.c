@@ -5,33 +5,19 @@
  *
  * Author:  Matthew Kerwin <matthew@kerwin.net.au>
  *
- * Copyright (C) 2009 Matthew Kerwin. All Rights Reserved.
+ * Copyright (C) 2009-2016 Matthew Kerwin. All Rights Reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Matthew Kerwin.
- * 4. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include <stdlib.h>
@@ -181,11 +167,16 @@ void show_version(void) {
 void show_help(void) {
 	printf("%sVERSION:%s\n", BOLD, NORMAL);
 	show_version();
+	printf("\n");
 	printf("%sOPTIONS:%s\n", BOLD, NORMAL);
+	printf("\n");
 	printf(" %s-C%s #  %s-c%s #  %s--count%s=#\n   generate a fixed number of passwords.  Default is 5.\n", BOLD, NORMAL, BOLD, NORMAL, BOLD, NORMAL);
+	printf("\n");
 	printf(" %s-N%s #  %s-n%s #  %s--min%s=#\n %s-X%s #  %s-x%s #  %s--max%s=#\n", BOLD, NORMAL, BOLD, NORMAL, BOLD, NORMAL, BOLD, NORMAL, BOLD, NORMAL, BOLD, NORMAL);
 	printf("   passwords have the given minimum/maximum length.  Defaults are 16, 32.\n");
+	printf("\n");
 	printf(" %s--%s [CHARACTERS]\n   passwords are built using precisely the given set of characters.\n", BOLD, NORMAL);
+	printf("\n");
 	printf(" %s[+-=]U  [+-=]u  --upper%s=[YES|NO|FORCE]\n", BOLD, NORMAL);
 	printf(" %s[+-=]L  [+-=]l  --lower%s=[YES|NO|FORCE]\n", BOLD, NORMAL);
 	printf(" %s[+-=]D  [+-=]d  --digits%s=[YES|NO|FORCE]\n", BOLD, NORMAL);
@@ -194,10 +185,13 @@ void show_help(void) {
 	printf("   and non-alphanumeric ASCII characters (respectively) in passwords.\n");
 	printf("   Defaults are: %s=ULD-A%s\n", BOLD, NORMAL);
 	printf("   Ignored if %s-- characters%s is specified.\n", BOLD, NORMAL);
+	printf("\n");
 	printf(" %s[+-]P  [+-]p  --printable%s=[YES|NO]\n", BOLD, NORMAL);
 	printf("   only generate printable passwords (no 1,l,O,0 characters).  Default = %sYES%s\n", BOLD, NORMAL);
 	printf("   Ignored if %s-- characters%s is specified.\n", BOLD, NORMAL);
+	printf("\n");
 	printf(" %s-V%s  %s-v%s  %s--version%s\n   show version information, and quit.\n", BOLD, NORMAL, BOLD, NORMAL, BOLD, NORMAL);
+	printf("\n");
 	printf(" %s-?%s  %s--help%s\n   show this help information, and quit.\n", BOLD, NORMAL, BOLD, NORMAL);
 }
 
