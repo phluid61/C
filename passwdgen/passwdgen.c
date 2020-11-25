@@ -268,7 +268,7 @@ void get_custom_chars(const char* arg, const char* message) {
 	}
 }
 
-inline void consume_chained_params(const char *arg, const char *original_arg, int accept) {
+static void consume_chained_params(const char *arg, const char *original_arg, int accept) {
 	char *ptr = (char*) arg;
 	int got_chars = 0;
 	for (; *ptr != 0; ptr ++) {
