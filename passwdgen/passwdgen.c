@@ -1,7 +1,7 @@
 /*
  * passwdgen.c
  *
- * Generates a pseudo-random password.
+ * Generates a pseudo-my_rand password.
  *
  * Author:  Matthew Kerwin <matthew@kerwin.net.au>
  *
@@ -25,11 +25,98 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef USE_RAND
+#  if 0
+#    define my_srand  srand
+#    define my_rand_  rand
+#    define my_RMAX   RAND_MAX
+#  else
+#    define my_srand  srandom
+#    define my_rand_  random
+#    define my_RMAX   2147483647
+#  endif
+#else
+	/*  Written in 2019 by David Blackman and Sebastiano Vigna (vigna@acm.org)
+	 *
+	 * To the extent possible under law, the author has dedicated all copyright
+	 * and related and neighboring rights to this software to the public domain
+	 * worldwide. This software is distributed without any warranty.
+	 *
+	 * See <http://creativecommons.org/publicdomain/zero/1.0/>. */
+
+	#include <stdint.h>
+
+	/* This is xoshiro256++ 1.0, one of our all-purpose, rock-solid generators.
+	 * It has excellent (sub-ns) speed, a state (256 bits) that is large
+	 * enough for any parallel application, and it passes all tests we are
+	 * aware of.
+	 *
+	 * For generating just floating-point numbers, xoshiro256+ is even faster.
+	 *
+	 * The state must be seeded so that it is not everywhere zero. If you have
+	 * a 64-bit seed, we suggest to seed a splitmix64 generator and use its
+	 * output to fill s. */
+
+	uint64_t __rotl(const uint64_t x, int k) {
+		return (x << k) | (x >> (64 - k));
+	}
+
+	uint64_t __s[4];
+
+	uint64_t __next(void) {
+		const uint64_t result = __rotl(__s[0] + __s[3], 23) + __s[0];
+
+		const uint64_t t = __s[1] << 17;
+
+		__s[2] ^= __s[0];
+		__s[3] ^= __s[1];
+		__s[1] ^= __s[2];
+		__s[0] ^= __s[3];
+
+		__s[2] ^= t;
+
+		__s[3] = __rotl(__s[3], 45);
+
+		return result;
+	}
+	/* END */
+
+	#define my_RMAX 0x7fffffff
+
+	long my_rand_() {
+		uint64_t n = __next();
+		return (long)(n & my_RMAX);
+	}
+
+	int my_srand(unsigned int seed) {
+		uint64_t s = (uint64_t)seed;
+		__s[0] = (s & 0xf0f0f0f0) | ((s & 0x0f0f0f0f) << 32);
+		__s[2] = (s & 0x0f0f0f0f) | ((s & 0xf0f0f0f0) << 32);
+		__s[1] = __rotl(__s[0], 17);
+		__s[3] = __rotl(__s[2], 45);
+		return (int)my_rand_();
+	}
+
+#endif
+
+int my_rand(int n) {
+	int limit;
+	int r;
+
+	limit = my_RMAX - (my_RMAX % n);
+
+	/* if the chosen number isn't in the range that divides 'n' evenly, discard it */
+	while ((r = my_rand_()) >= limit) ;
+
+	return r % n;
+}
+
+
 #define BOLD   "\x1B[1m"
 #define NORMAL "\x1B[0m"
 
 const char* app_name = "passwdgen";
-const char* version  = "1.0";
+const char* version  = "1.1";
 
 #define NO    0
 #define YES   1
@@ -78,7 +165,7 @@ int main(int argc, char *argv[]) {
 
 	parse_command_line(argc, argv);
 
-	if ((upper | lower | numer | ascii) == 0) {
+	if ((upper | lower | numer | ascii | custom_chars_n) == 0) {
 		fprintf(stderr, "WARNING:  all characters disallowed.  Using default sets.\n");
 		upper = FORCE;
 		lower = FORCE;
@@ -86,11 +173,11 @@ int main(int argc, char *argv[]) {
 		ascii = NO;
 	}
 
-	srandom(time(0));
+	my_srand(time(0));
 
 	for (j = 0; j < repetitions; j++) {
 		if (min_length == max_length) { length = max_length; }
-		else { length = random() % (max_length - min_length) + min_length; }
+		else { length = my_rand(max_length - min_length) + min_length; }
 		passwd = (char*) malloc(length + 1);
 		has_upper = 0;
 		has_lower = 0;
@@ -98,7 +185,7 @@ int main(int argc, char *argv[]) {
 		has_ascii = 0;
 		for (i = 0; i < length; i++) {
 			if (custom_chars_n > 0) {
-				passwd[i] = custom_chars[random() % custom_chars_n];
+				passwd[i] = custom_chars[my_rand(custom_chars_n)];
 			} else {
 				if (upper == FORCE && !has_upper) { try_upper = 1; }
 				if (lower == FORCE && !has_lower) { try_lower = 2; }
@@ -111,34 +198,34 @@ int main(int argc, char *argv[]) {
 					try_ascii = (ascii != NO) ? 8 : 0;
 				}
 				do {
-					switch (random() % 4) {
+					switch (my_rand(4)) {
 						case 0:
 							if (try_upper) {
-								if (printable != NO) { passwd[i] = UPP_P[random() % 25]; }
-								else                 { passwd[i] = UPPER[random() % 26]; }
+								if (printable != NO) { passwd[i] = UPP_P[my_rand(25)]; }
+								else                 { passwd[i] = UPPER[my_rand(26)]; }
 								has_upper = 1;
 								goto ENDWHILE;
 							}
 							break;
 						case 1:
 							if (try_lower) {
-								if (printable != NO) { passwd[i] = LOW_P[random() % 25]; }
-								else                 { passwd[i] = LOWER[random() % 26]; }
+								if (printable != NO) { passwd[i] = LOW_P[my_rand(25)]; }
+								else                 { passwd[i] = LOWER[my_rand(26)]; }
 								has_lower = 1;
 								goto ENDWHILE;
 							}
 							break;
 						case 2:
 							if (try_numer) {
-								if (printable != NO) { passwd[i] = NUM_P[random() % 8]; }
-								else                 { passwd[i] = NUMER[random() % 10]; }
+								if (printable != NO) { passwd[i] = NUM_P[my_rand(8)]; }
+								else                 { passwd[i] = NUMER[my_rand(10)]; }
 								has_numer = 1;
 								goto ENDWHILE;
 							}
 							break;
 						case 3:
 							if (try_ascii) {
-								passwd[i] = ASCII[random() % 32];
+								passwd[i] = ASCII[my_rand(32)];
 								has_ascii = 1;
 								goto ENDWHILE;
 							}
@@ -496,7 +583,7 @@ void permute(char* string, int length) {
 	char c;
 	if (length < 2) return;
 	for (i = 0; i < length; i++) {
-		j = random() % length;
+		j = my_rand(length);
 		if (j == i) {
 			j = (j + 1) % length;
 		}
